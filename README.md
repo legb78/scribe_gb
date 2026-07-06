@@ -23,12 +23,24 @@ Créer un fichier `.env` à la racine (voir `.env.example`) avec votre clé API 
 
 ## Utilisation
 
-Le CLI complet arrive dans les étapes suivantes. En attendant, la transcription
+Le CLI complet arrive dans les étapes suivantes. En attendant, chaque brique
 se teste seule, depuis la racine du projet :
 
 ```
 python -m src.transcribe samples/demo.wav
+python -m src.summarize ma_transcription.txt
+python -m src.summarize ma_transcription.txt --json
 ```
+
+Par défaut le compte rendu est du Markdown lisible ; avec `--json`, le LLM est
+contraint (mode `json_object` de Groq) de produire un objet JSON aux clés
+`titre`, `resume`, `points_cles` et `decisions_actions`, exploitable par
+programme.
+
+Le comportement du rédacteur de comptes rendus est piloté par les prompts
+système stockés dans `prompts/system_prompt.txt` (Markdown) et
+`prompts/system_prompt_json.txt` (JSON) : pour améliorer les comptes rendus,
+on itère sur ces fichiers, sans toucher au code.
 
 `samples/demo.wav` est un court extrait de réunion fictif (~27 secondes) généré
 par synthèse vocale, assez léger pour être versionné. L'API Speech-to-Text de
@@ -98,5 +110,35 @@ avec une taille maximale de 25 Mo en offre gratuite (100 Mo en offre payante).
     de les présenter comme fiables ;
   - **les segments** offriraient un découpage naturel pour traiter de très
     longues réunions par morceaux, sans dépasser la fenêtre de contexte du LLM.
-- **Q4** — *à rédiger*
-- **Q5** — *à rédiger*
+- **Q4 : quelle température pour cet usage, et pourquoi ?**
+
+  La température règle la part d'aléa quand le modèle choisit chaque token :
+  à 0 il prend quasi systématiquement le plus probable ; plus elle monte, plus
+  il pioche des tokens moins attendus — utile pour la créativité, néfaste pour
+  la fidélité. Notre tâche est une restitution factuelle sous la contrainte
+  « ne rien inventer » : l'aléa n'apporte rien et augmente précisément le
+  risque d'enjolivement que le cahier des charges interdit. Nous choisissons
+  **0.15**, définie dans `src/config.py` avec les autres réglages : le
+  comportement est quasi déterministe — deux exécutions sur le même audio
+  donnent des comptes rendus presque identiques, ce qui rend comparables les
+  itérations successives sur le prompt système — tout en gardant un soupçon de
+  souplesse rédactionnelle. Un 0 strict serait tout aussi défendable ; au-delà
+  de ~0,7 en revanche, le rédacteur commencerait à broder.
+
+- **Q5 : le prompt système part à chaque requête — quel lien avec les tokens en cache ?**
+
+  Notre prompt système est strictement identique d'une requête à l'autre et
+  placé en tout début de conversation. Or les fournisseurs d'API pratiquent le
+  *cache de préfixe* : quand le début d'une requête correspond exactement à
+  celui d'une requête récente, le calcul déjà effectué sur ces tokens est
+  réutilisé au lieu d'être refait. Chez Groq, c'est automatique : les tokens
+  servis depuis le cache sont facturés 50 % moins cher, la latence baisse, et
+  le champ `usage.cached_tokens` de la réponse permet de le constater (le
+  cache expire après ~2 h sans utilisation). D'où une règle de structuration
+  que Scribe respecte déjà : la partie **stable** (prompt système) en premier,
+  la partie **variable** (la transcription) ensuite — l'ordre inverse
+  casserait le préfixe commun, donc le cache, à chaque requête. Nuance
+  honnête : chez Groq, ce cache n'est actif aujourd'hui que sur les modèles
+  GPT-OSS ; notre `llama-3.3-70b-versatile` n'en bénéficie donc pas encore,
+  mais la structure est prête, et le même principe vaut chez tous les
+  fournisseurs (OpenAI, Anthropic...).
