@@ -27,7 +27,14 @@ Créer un fichier `.env` à la racine (voir `.env.example`) avec votre clé API 
 
 ## Réponses aux questions du TP
 
-- **Q1** — *à rédiger*
+- **Q1 : pourquoi le `.gitignore` doit-il exister avant d'écrire la moindre ligne de code manipulant des secrets ?**
+  Parce que Git n'oublie rien : un fichier commité reste lisible dans l'historique pour
+  toujours, même si on le supprime au commit suivant. Une clé API qui passe une seule fois
+  dans un commit poussé sur GitHub doit être considérée comme volée (des robots scannent
+  les dépôts publics en permanence). En ignorant `.env` avant même qu'il existe, la fuite
+  devient impossible : `git add .` ne pourra jamais l'embarquer, même par étourderie.
+  Faire l'inverse (coder d'abord, ignorer ensuite) repose sur la vigilance humaine, et
+  c'est exactement comme ça que les fuites arrivent.
 - **Q2** — *à rédiger*
 - **Q3** — *à rédiger*
 - **Q4** — *à rédiger*
