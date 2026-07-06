@@ -23,19 +23,55 @@ Créer un fichier `.env` à la racine (voir `.env.example`) avec votre clé API 
 
 ## Utilisation
 
-Le CLI complet arrive dans les étapes suivantes. En attendant, chaque brique
-se teste seule, depuis la racine du projet :
+Une seule commande, depuis la racine du projet :
+
+```
+python -m src.main samples/demo.wav
+```
+
+Le programme affiche sa progression, montre le compte rendu à l'écran et
+l'enregistre dans un fichier Markdown daté :
+
+```
+[1/2] Transcription de samples/demo.wav en cours...
+[1/2] Transcription terminée (385 caractères).
+[2/2] Rédaction du compte rendu en cours...
+[2/2] Compte rendu rédigé.
+
+# Réunion Projet Scrib
+
+## Résumé
+La réunion a porté sur trois points clés du projet Scrib. La maquette a été
+validée et la version finale sera envoyée par Sarah. [...]
+
+## Points clés
+- La maquette du projet est validée
+- Les données de test sont en cours de préparation par Karim
+- La démonstration client est confirmée
+
+## Décisions et actions
+- Sarah enverra la version finale de la maquette vendredi
+- Karim fournira les données de test avant lundi prochain
+- La démonstration client est confirmée pour le 15 du mois
+
+Compte rendu enregistré dans : compte_rendu_demo_2026-07-06_11h33.md
+```
+
+Avec l'option `--json`, le LLM est contraint (mode `json_object` de Groq) de
+produire un objet JSON aux clés `titre`, `resume`, `points_cles` et
+`decisions_actions`, enregistré en `.json` — pratique pour exploiter le
+compte rendu par programme.
+
+Les messages de progression sont écrits sur stderr : stdout ne contient que
+le compte rendu, qu'on peut donc rediriger proprement
+(`python -m src.main reunion.m4a > cr.md`).
+
+Chaque brique reste aussi testable séparément :
 
 ```
 python -m src.transcribe samples/demo.wav
-python -m src.summarize ma_transcription.txt
-python -m src.summarize ma_transcription.txt --json
+python -m src.summarize ma_transcription.txt [--json]
 ```
-
-Par défaut le compte rendu est du Markdown lisible ; avec `--json`, le LLM est
-contraint (mode `json_object` de Groq) de produire un objet JSON aux clés
-`titre`, `resume`, `points_cles` et `decisions_actions`, exploitable par
-programme.
 
 Le comportement du rédacteur de comptes rendus est piloté par les prompts
 système stockés dans `prompts/system_prompt.txt` (Markdown) et
@@ -46,6 +82,19 @@ on itère sur ces fichiers, sans toucher au code.
 par synthèse vocale, assez léger pour être versionné. L'API Speech-to-Text de
 Groq accepte les formats flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav et webm,
 avec une taille maximale de 25 Mo en offre gratuite (100 Mo en offre payante).
+
+## Tests
+
+```
+python -m pytest
+```
+
+La suite (tests/) tourne hors ligne : tous les appels à l'API Groq sont
+simulés, aucune vraie clé n'est nécessaire. Sont couverts : la configuration
+(modèles définis, échec clair si la clé manque), la transcription (fichier
+introuvable, erreur API, modèle utilisé), le compte rendu (Markdown, mode
+JSON contraint et validé, prompt manquant, encodages UTF-8/UTF-16) et le CLI
+(fichier de sortie daté, option --json, code de sortie en cas d'erreur).
 
 ## Réponses aux questions du TP
 
