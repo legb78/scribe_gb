@@ -23,7 +23,17 @@ Créer un fichier `.env` à la racine (voir `.env.example`) avec votre clé API 
 
 ## Utilisation
 
-*À compléter au fil du développement.*
+Le CLI complet arrive dans les étapes suivantes. En attendant, la transcription
+se teste seule, depuis la racine du projet :
+
+```
+python -m src.transcribe samples/demo.wav
+```
+
+`samples/demo.wav` est un court extrait de réunion fictif (~27 secondes) généré
+par synthèse vocale, assez léger pour être versionné. L'API Speech-to-Text de
+Groq accepte les formats flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav et webm,
+avec une taille maximale de 25 Mo en offre gratuite (100 Mo en offre payante).
 
 ## Réponses aux questions du TP
 
@@ -63,6 +73,30 @@ Créer un fichier `.env` à la racine (voir `.env.example`) avec votre clé API 
 
   Ces deux identifiants sont définis à un seul endroit du projet :
   [src/config.py](src/config.py).
-- **Q3** — *à rédiger*
+- **Q3 : que renvoie exactement l'API en plus du texte, et qu'est-ce qui serait utile à Scribe plus tard ?**
+
+  Par défaut (`response_format="json"`), la réponse ne contient que le champ
+  `text` (plus un identifiant de requête). Mais en demandant
+  `response_format="verbose_json"`, l'API renvoie aussi :
+  - `language` : la langue détectée automatiquement ;
+  - `duration` : la durée de l'audio ;
+  - `segments` : la transcription découpée en segments, chacun avec ses
+    horodatages `start`/`end`, son texte, et trois indicateurs de fiabilité :
+    `avg_logprob` (confiance moyenne du modèle), `no_speech_prob` (probabilité
+    que le passage ne soit pas de la parole : silence, musique...) et
+    `compression_ratio` (un ratio anormal trahit du texte répétitif, symptôme
+    classique d'hallucination) ;
+  - avec `timestamp_granularities=["word"]`, un horodatage mot par mot.
+
+  Pour l'évolution de Scribe, le plus prometteur :
+  - **les horodatages** permettraient un compte rendu minuté (« Décision à
+    12:34 »), des sous-titres SRT/VTT, ou un « cliquer pour réécouter » ;
+  - **la langue détectée** permettrait d'adapter automatiquement la langue du
+    compte rendu et du prompt envoyé au LLM ;
+  - **`no_speech_prob` et `avg_logprob`** permettraient de signaler les
+    passages douteux (audio dégradé) à faire relire par un humain plutôt que
+    de les présenter comme fiables ;
+  - **les segments** offriraient un découpage naturel pour traiter de très
+    longues réunions par morceaux, sans dépasser la fenêtre de contexte du LLM.
 - **Q4** — *à rédiger*
 - **Q5** — *à rédiger*
