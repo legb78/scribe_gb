@@ -35,7 +35,34 @@ Créer un fichier `.env` à la racine (voir `.env.example`) avec votre clé API 
   devient impossible : `git add .` ne pourra jamais l'embarquer, même par étourderie.
   Faire l'inverse (coder d'abord, ignorer ensuite) repose sur la vigilance humaine, et
   c'est exactement comme ça que les fuites arrivent.
-- **Q2** — *à rédiger*
+- **Q2 : quels modèles STT et LLM propose Groq aujourd'hui, et lesquels choisissez-vous ?**
+
+  **Côté STT**, Groq propose en production deux variantes de Whisper :
+  `whisper-large-v3` (0,111 $/h d'audio) et `whisper-large-v3-turbo` (0,04 $/h).
+  Nous choisissons **`whisper-large-v3-turbo`** : sa qualité de transcription est
+  quasi identique à celle de large-v3 sur de l'audio de réunion classique, pour un
+  coût presque trois fois moindre et une transcription plus rapide. Le modèle
+  large-v3 complet ne se justifierait que pour de l'audio très dégradé (bruit fort,
+  accents difficiles), où sa légère avance en précision compte.
+
+  **Côté LLM**, le catalogue de production comprend `llama-3.1-8b-instant`
+  (560 tokens/s, 0,05/0,08 $ par million de tokens), `llama-3.3-70b-versatile`
+  (280 tokens/s, 0,59/0,79 $), `openai/gpt-oss-120b` (500 tokens/s, 0,15/0,60 $)
+  et `openai/gpt-oss-20b` (1000 tokens/s, 0,075/0,30 $), plus des systèmes
+  agentiques (`groq/compound`) et des modèles en préversion (Llama 4 Scout,
+  Qwen, etc.) déconseillés en production.
+  Nous choisissons **`llama-3.3-70b-versatile`** : c'est le meilleur rédacteur
+  *en français* du catalogue (le multilinguisme fait partie de son entraînement
+  officiel, là où les gpt-oss sont surtout optimisés pour l'anglais), il suit
+  fidèlement des consignes de structuration (titre, points clés, décisions,
+  actions), et sa vitesse comme son coût restent largement suffisants pour notre
+  usage : un compte rendu représente quelques milliers de tokens, soit une
+  fraction de centime par exécution. Si le coût devenait un critère dominant,
+  `openai/gpt-oss-120b` serait l'alternative naturelle (moins cher et plus
+  rapide, au prix d'un français un peu moins naturel).
+
+  Ces deux identifiants sont définis à un seul endroit du projet :
+  [src/config.py](src/config.py).
 - **Q3** — *à rédiger*
 - **Q4** — *à rédiger*
 - **Q5** — *à rédiger*
