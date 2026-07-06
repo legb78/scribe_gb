@@ -21,6 +21,10 @@ load_dotenv(PROJECT_ROOT / ".env")
 STT_MODEL = "whisper-large-v3-turbo"
 LLM_MODEL = "llama-3.3-70b-versatile"
 
+# Proche de zéro : le compte rendu doit restituer fidèlement la transcription,
+# pas faire preuve de créativité (voir Q4 du README).
+LLM_TEMPERATURE = 0.15
+
 # --- Secrets ---
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
