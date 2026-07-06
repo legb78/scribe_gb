@@ -217,3 +217,7 @@ scribe_env
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Sorties générées par Scribe
+compte_rendu_*.md
+compte_rendu_*.json
