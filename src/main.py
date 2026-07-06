@@ -16,6 +16,7 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.chat import chat
 from src.summarize import summarize
 from src.transcribe import transcribe
 
@@ -30,6 +31,11 @@ def main() -> None:
         "--json",
         action="store_true",
         help="produit un compte rendu JSON exploitable par programme, au lieu du Markdown",
+    )
+    parser.add_argument(
+        "--chat",
+        action="store_true",
+        help="après le compte rendu, ouvre une conversation pour poser des questions dessus",
     )
     args = parser.parse_args()
 
@@ -53,6 +59,9 @@ def main() -> None:
 
     print(report)
     print(f"\nCompte rendu enregistré dans : {output}", file=sys.stderr)
+
+    if args.chat:
+        chat(report)
 
 
 if __name__ == "__main__":

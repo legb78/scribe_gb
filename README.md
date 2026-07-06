@@ -66,6 +66,29 @@ Les messages de progression sont écrits sur stderr : stdout ne contient que
 le compte rendu, qu'on peut donc rediriger proprement
 (`python -m src.main reunion.m4a > cr.md`).
 
+### Mode chat
+
+```
+python -m src.main samples/demo.wav --chat
+```
+
+Après la génération, une conversation s'ouvre : posez vos questions sur le
+compte rendu (`quit`, `exit` ou Ctrl+C pour sortir). Le modèle répond
+uniquement à partir du compte rendu — si l'information n'y figure pas, il le
+dit au lieu d'inventer. On peut aussi rouvrir une conversation sur un compte
+rendu déjà enregistré :
+
+```
+python -m src.chat compte_rendu_demo_2026-07-06_11h33.md
+```
+
+Lien avec le cours : la « mémoire » du chat n'est rien d'autre que la liste
+`messages` renvoyée en entier à l'API à chaque tour — chaque question et
+chaque réponse y sont ajoutées au fur et à mesure, c'est la mécanique de base
+d'un agent conversationnel. Et comme le compte rendu vit dans le prompt
+système, en tête de conversation, chaque tour renvoie le même préfixe
+stable : exactement ce que le cache de préfixe décrit en Q5 sait resservir.
+
 Chaque brique reste aussi testable séparément :
 
 ```
